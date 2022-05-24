@@ -71,15 +71,33 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "firstPlaceWeight",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "secondPlace",
         "type": "string"
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "secondPlaceWeight",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "thirdPlace",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "thirdPlaceWeight",
+        "type": "uint256"
       }
     ],
     "name": "DataFulfilled",
@@ -139,23 +157,57 @@
       },
       {
         "internalType": "bytes",
-        "name": "firstPlaceResponse",
+        "name": "firstPlaceUserResponse",
         "type": "bytes"
       },
       {
-        "internalType": "bytes",
-        "name": "secondPlaceResponse",
-        "type": "bytes"
+        "internalType": "uint256",
+        "name": "firstPlaceWeightResponse",
+        "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "thirdPlaceResponse",
+        "name": "secondPlaceUserResponse",
         "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "secondPlaceWeightResponse",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "thirdPlaceUserResponse",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "thirdPlaceWeightResponse",
+        "type": "uint256"
       }
     ],
     "name": "fulfill",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "ratingData",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
