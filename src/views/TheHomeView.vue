@@ -1,5 +1,23 @@
 <template>
   <section>
+    <div v-if="!!pastLogs?.length">
+      <p-timeline :value="pastLogs" align="alternate">
+        <template #marker="slotProps">
+          <span
+            class="custom-marker shadow-2"
+            :style="{ backgroundColor: slotProps.item.color }"
+          >
+          </span>
+        </template>
+
+        <template #content="slotProps">
+          <transaction-list-item
+            :transaction="slotProps.item"
+          ></transaction-list-item>
+        </template>
+      </p-timeline>
+    </div>
+
     <button @click="onClick">call method</button>
 
     <div>
@@ -47,6 +65,8 @@ import UsersGithubApiGateway from "../gateway/UsersGithubApiGateway";
 import RatingContributorVue from "../components/rating-contributor/RatingContributor.vue";
 import UsersGithubApiMapper from "../mappers/UsersGithubApiMapper";
 import PChart from "primevue/chart";
+import PTimeline from "primevue/timeline";
+import TransactionListItem from "../components/transactions/TransactionListItem.vue";
 
 type Places = {
   first: RatingContributor | undefined;
@@ -58,6 +78,8 @@ export default defineComponent({
   components: {
     RatingContributor: RatingContributorVue,
     PChart,
+    PTimeline,
+    TransactionListItem,
   },
   setup() {
     const web3 = new Web3(Web3.givenProvider);
@@ -77,11 +99,43 @@ export default defineComponent({
       third: undefined,
     });
 
+    const devmuneContractAddress = "0x66813194c7a9c7d79A5062866BAD5C8653577ecb";
+
     const devmuneContract = new web3.eth.Contract(
       // @ts-ignore
       DevmuneContractAbi.default,
-      "0x88b9e61fA184347C447577695279DA6566cd2b25"
+      devmuneContractAddress
     );
+
+    const pastLogs = ref<any[]>([]);
+
+    const createPastLogsForDevmuneContract = async () => {
+      try {
+        const logs = await web3.eth.getPastLogs({
+          fromBlock: "0x0",
+          address: devmuneContractAddress,
+        });
+        // debugger;
+        // pastLogs.value = logs;
+        for await (const pastLog of logs) {
+          const transactionDetails = await web3.eth.getTransaction(
+            pastLog.transactionHash
+          );
+          debugger;
+          const ascii = web3.utils.toAscii(transactionDetails.input);
+          pastLogs.value.push({
+            ...transactionDetails,
+            topics: pastLog.topics,
+          });
+        }
+      } catch (ex) {
+        console.error(ex);
+      }
+    };
+
+    onMounted(async () => {
+      await createPastLogsForDevmuneContract();
+    });
 
     const callPlacesFromContract = async () => {
       try {
@@ -201,6 +255,7 @@ export default defineComponent({
       dataForChart,
       chartData,
       horizontalOptions,
+      pastLogs,
     };
   },
 });
