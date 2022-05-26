@@ -1,5 +1,31 @@
 <template>
   <section>
+    <div>
+      <div>
+        <input-text
+          id="field-repo"
+          type="text"
+          v-model="dataForRatingContract.repo"
+          placeholder="Repository"
+        ></input-text>
+      </div>
+
+      <div>
+        <input-text
+          id="field-repo-owner"
+          type="text"
+          v-model="dataForRatingContract.repoOwner"
+          placeholder="Repository owner"
+        ></input-text>
+      </div>
+
+      <p-button
+        label="Send request to node"
+        class="p-button-rounded"
+        @click.stop="onClickSendRequestToNode"
+      ></p-button>
+    </div>
+
     <div v-if="!!pastLogs?.length">
       <p-timeline :value="pastLogs" align="alternate">
         <template #marker="slotProps">
@@ -67,6 +93,8 @@ import UsersGithubApiMapper from "../mappers/UsersGithubApiMapper";
 import PChart from "primevue/chart";
 import PTimeline from "primevue/timeline";
 import TransactionListItem from "../components/transactions/TransactionListItem.vue";
+import InputText from "primevue/inputtext";
+import PButton from "primevue/button";
 
 type Places = {
   first: RatingContributor | undefined;
@@ -80,6 +108,8 @@ export default defineComponent({
     PChart,
     PTimeline,
     TransactionListItem,
+    InputText,
+    PButton,
   },
   setup() {
     const web3 = new Web3(Web3.givenProvider);
@@ -99,7 +129,7 @@ export default defineComponent({
       third: undefined,
     });
 
-    const devmuneContractAddress = "0x66813194c7a9c7d79A5062866BAD5C8653577ecb";
+    const devmuneContractAddress = "0x85b82cE5293F38f64eB33890236A2B0de198f113";
 
     const devmuneContract = new web3.eth.Contract(
       // @ts-ignore
@@ -249,13 +279,68 @@ export default defineComponent({
       },
     });
 
+    const dataForRatingContract = reactive({
+      repo: "",
+      repoOwner: "",
+      fromDate: "2022-03-05",
+    });
+
+    const callRequestRatingFromContract = async (
+      repo: string,
+      repoOwner: string,
+      fromDate: string
+    ) => {
+      try {
+        const contractMethodTransactionAbi = devmuneContract.methods
+          .requestRating(repo, repoOwner, fromDate)
+          .encodeABI();
+        debugger;
+        const transactionParameters = {
+          to: devmuneContract.options.address,
+          // @ts-ignore
+          from: window.ethereum.selectedAddress,
+          data: contractMethodTransactionAbi,
+        };
+        // @ts-ignore
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [transactionParameters],
+        });
+      } catch (ex) {
+        console.warn(ex);
+      }
+    };
+
+    const requestUserAccount = async () => {
+      try {
+        // @ts-ignore
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        debugger;
+      } catch (ex) {
+        console.warn(ex);
+      }
+    };
+
+    const onClickSendRequestToNode = async () => {
+      // await requestUserAccount();
+      await callRequestRatingFromContract(
+        dataForRatingContract.repo,
+        dataForRatingContract.repoOwner,
+        dataForRatingContract.fromDate
+      );
+    };
+
     return {
       places,
-      onClick,
       dataForChart,
       chartData,
       horizontalOptions,
       pastLogs,
+      dataForRatingContract,
+      onClick,
+      onClickSendRequestToNode,
     };
   },
 });

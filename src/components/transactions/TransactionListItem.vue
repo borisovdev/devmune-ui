@@ -20,6 +20,8 @@
 import { defineComponent, computed } from "vue";
 import PCard from "primevue/card";
 import Web3 from "web3";
+// @ts-ignore
+import * as DevmuneContractAbi from "../../contracts/DevmuneRatingInteractor.abi.json";
 
 export default defineComponent({
   components: {
@@ -34,44 +36,45 @@ export default defineComponent({
   setup(props) {
     const web3 = new Web3(Web3.givenProvider);
 
-    const inputForAbiDecode = [
-      {
-        type: "bytes32",
-        name: "requestId",
-        indexed: true,
-      },
-      {
-        type: "string",
-        name: "firstPlace",
-      },
-      {
-        type: "uint256",
-        name: "firstPlaceWeight",
-      },
-      {
-        type: "string",
-        name: "secondPlace",
-      },
-      {
-        type: "uint256",
-        name: "secondPlaceWeight",
-      },
-      {
-        type: "string",
-        name: "thirdPlace",
-      },
-      {
-        type: "uint256",
-        name: "thirdPlaceWeight",
-      },
-    ];
+    // const inputForAbiDecode = [
+    //   {
+    //     type: "bytes32",
+    //     name: "requestId",
+    //     indexed: true,
+    //   },
+    //   {
+    //     type: "string",
+    //     name: "firstPlace",
+    //   },
+    //   {
+    //     type: "uint256",
+    //     name: "firstPlaceWeight",
+    //   },
+    //   {
+    //     type: "string",
+    //     name: "secondPlace",
+    //   },
+    //   {
+    //     type: "uint256",
+    //     name: "secondPlaceWeight",
+    //   },
+    //   {
+    //     type: "string",
+    //     name: "thirdPlace",
+    //   },
+    //   {
+    //     type: "uint256",
+    //     name: "thirdPlaceWeight",
+    //   },
+    // ];
 
     const decodedInput = computed(() => {
       try {
         // return web3.utils.toAscii(props.transaction.input);
         debugger;
         return web3.eth.abi.decodeLog(
-          inputForAbiDecode,
+          // @ts-ignore
+          DevmuneContractAbi.default,
           props.transaction.input,
           []
         );

@@ -211,7 +211,23 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "repository",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "repositoryOwner",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "dateFrom",
+        "type": "string"
+      }
+    ],
     "name": "requestRating",
     "outputs": [],
     "stateMutability": "nonpayable",
