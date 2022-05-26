@@ -1,3 +1,5 @@
+@import './root/index.css';
+@import './reboot/index.css';
 @import './comopnents/index.css';
 
 main {

@@ -1,5 +1,5 @@
 <template>
-  <p-card class="mb-2" :style="{ textAlign: `left` }">
+  <p-card class="mb-2" :style="{ textAlign: `left`, cursor: `pointer` }" @click.stop="onClickCard">
     <template #title>
       <h3 :style="{ fontSize: `0.9rem` }">
         {{ transaction.hash }}
@@ -49,7 +49,12 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props) {
+  emits: {
+    "select:transactionEvent": (payload: any) => {
+      return true;
+    },
+  },
+  setup(props, { emit }) {
     const web3 = new Web3(Web3.givenProvider);
 
     const inputForAbiDecode = [
@@ -97,8 +102,13 @@ export default defineComponent({
       }
     });
 
+    const onClickCard = () => {
+      emit("select:transactionEvent", props.event);
+    };
+
     return {
       decodedEventInput,
+      onClickCard,
     };
   },
 });

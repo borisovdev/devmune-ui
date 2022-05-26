@@ -42,30 +42,40 @@
 
         <!-- <button @click="onClick">call method</button> -->
 
-        <div>
-          <rating-contributor
-            v-if="places.first !== undefined"
-            :contributor="places.first"
-          ></rating-contributor>
+        <div
+          v-if="
+            places.first !== undefined ||
+            places.second !== undefined ||
+            places.third !== undefined
+          "
+          class="mt-4"
+        >
+          <h2>
+            Rating from history
+          </h2>
 
-          <rating-contributor
-            v-if="places.second !== undefined"
-            :contributor="places.second"
-          ></rating-contributor>
+          <div>
+            <rating-contributor
+              :contributor="places.first"
+            ></rating-contributor>
 
-          <rating-contributor
-            v-if="places.third !== undefined"
-            :contributor="places.third"
-          ></rating-contributor>
-        </div>
+            <rating-contributor
+              :contributor="places.second"
+            ></rating-contributor>
 
-        <div>
-          <p-chart
-            v-if="dataForChart !== undefined"
-            type="bar"
-            :data="dataForChart"
-            :options="horizontalOptions"
-          ></p-chart>
+            <rating-contributor
+              :contributor="places.third"
+            ></rating-contributor>
+          </div>
+
+          <div>
+            <p-chart
+              v-if="dataForChart !== undefined"
+              type="bar"
+              :data="dataForChart"
+              :options="horizontalOptions"
+            ></p-chart>
+          </div>
         </div>
       </div>
 
@@ -78,6 +88,7 @@
             :key="pastLog.transaction.transactionHash"
             :transaction="pastLog.transaction"
             :event="pastLog.event"
+            @select:transactionEvent="onEmitSelectTransactionEvent"
           ></transaction-list-item>
         </div>
 
@@ -186,54 +197,100 @@ export default defineComponent({
       await createPastLogsForDevmuneContract();
     });
 
-    const callPlacesFromContract = async () => {
+    const createRatingFromTransactionEvent = async (
+      transactionEvent: any
+    ): Promise<Places> => {
       try {
-        const firstPlaceName = await devmuneContract.methods
-          .firstPlace()
-          .call();
-
-        const secondPlaceName = await devmuneContract.methods
-          .secondPlace()
-          .call();
-
-        const thirdPlaceName = await devmuneContract.methods
-          .thirdPlace()
-          .call();
-
-        const firstPlace = await usersGithubApiGateway.getContributor(
-          firstPlaceName
+        const firstPlaceUser = await usersGithubApiGateway.getContributor(
+          transactionEvent.returnValues.firstPlace
         );
-        if (firstPlace !== undefined)
-          firstPlace.weight = await devmuneContract.methods
-            .ratingData(firstPlaceName)
-            .call();
-        places.first = firstPlace;
+        if (firstPlaceUser !== undefined) {
+          const firstPlaceWeight =
+            transactionEvent.returnValues.firstPlaceWeight;
+          firstPlaceUser.weight = parseInt(firstPlaceWeight);
+        }
 
-        const secondPlace = await usersGithubApiGateway.getContributor(
-          secondPlaceName
+        const secondPlaceUser = await usersGithubApiGateway.getContributor(
+          transactionEvent.returnValues.secondPlace
         );
-        if (secondPlace !== undefined)
-          secondPlace.weight = await devmuneContract.methods
-            .ratingData(secondPlaceName)
-            .call();
-        places.second = secondPlace;
+        if (secondPlaceUser !== undefined) {
+          const secondPlaceWeight =
+            transactionEvent.returnValues.secondPlaceWeight;
+          secondPlaceUser.weight = parseInt(secondPlaceWeight);
+        }
 
-        const thirdPlace = await usersGithubApiGateway.getContributor(
-          thirdPlaceName
+        const thirdPlaceUser = await usersGithubApiGateway.getContributor(
+          transactionEvent.returnValues.thirdPlace
         );
-        if (thirdPlace !== undefined)
-          thirdPlace.weight = await devmuneContract.methods
-            .ratingData(thirdPlaceName)
-            .call();
-        places.third = thirdPlace;
+        if (thirdPlaceUser !== undefined) {
+          const thirdPlaceWeight =
+            transactionEvent.returnValues.thirdPlaceWeight;
+          thirdPlaceUser.weight = parseInt(thirdPlaceWeight);
+        }
+
+        return {
+          first: firstPlaceUser,
+          second: secondPlaceUser,
+          third: thirdPlaceUser,
+        };
       } catch (ex) {
-        console.error(ex);
+        console.warn(ex);
+        return {
+          first: undefined,
+          second: undefined,
+          third: undefined,
+        };
       }
     };
 
-    const onClick = async () => {
-      await callPlacesFromContract();
-    };
+    // const callPlacesFromContract = async () => {
+    //   try {
+    //     const firstPlaceName = await devmuneContract.methods
+    //       .firstPlace()
+    //       .call();
+
+    //     const secondPlaceName = await devmuneContract.methods
+    //       .secondPlace()
+    //       .call();
+
+    //     const thirdPlaceName = await devmuneContract.methods
+    //       .thirdPlace()
+    //       .call();
+
+    //     const firstPlace = await usersGithubApiGateway.getContributor(
+    //       firstPlaceName
+    //     );
+    //     if (firstPlace !== undefined)
+    //       firstPlace.weight = await devmuneContract.methods
+    //         .ratingData(firstPlaceName)
+    //         .call();
+    //     places.first = firstPlace;
+
+    //     const secondPlace = await usersGithubApiGateway.getContributor(
+    //       secondPlaceName
+    //     );
+    //     if (secondPlace !== undefined)
+    //       secondPlace.weight = await devmuneContract.methods
+    //         .ratingData(secondPlaceName)
+    //         .call();
+    //     places.second = secondPlace;
+
+    //     const thirdPlace = await usersGithubApiGateway.getContributor(
+    //       thirdPlaceName
+    //     );
+    //     if (thirdPlace !== undefined)
+    //       thirdPlace.weight = await devmuneContract.methods
+    //         .ratingData(thirdPlaceName)
+    //         .call();
+    //     places.third = thirdPlace;
+    //   } catch (ex) {
+    //     console.error(ex);
+    //   }
+    // };
+
+    // const onClick = async () => {
+    //   await callPlacesFromContract();
+    // };
 
     const dataForChart = computed(() => {
       if (!places.first || !places.second || !places.third) return undefined;
@@ -258,16 +315,16 @@ export default defineComponent({
       };
     });
 
-    const chartData = ref({
-      labels: ["first", "second", "third"],
-      datasets: [
-        {
-          label: "first",
-          backgroundColor: "#42A5F5",
-          data: [10, 5, 3],
-        },
-      ],
-    });
+    // const chartData = ref({
+    //   labels: ["first", "second", "third"],
+    //   datasets: [
+    //     {
+    //       label: "first",
+    //       backgroundColor: "#42A5F5",
+    //       data: [10, 5, 3],
+    //     },
+    //   ],
+    // });
 
     const horizontalOptions = ref({
       indexAxis: "y",
@@ -330,18 +387,6 @@ export default defineComponent({
       }
     };
 
-    const requestUserAccount = async () => {
-      try {
-        // @ts-ignore
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        debugger;
-      } catch (ex) {
-        console.warn(ex);
-      }
-    };
-
     const onClickSendRequestToNode = async () => {
       // await requestUserAccount();
       await callRequestRatingFromContract(
@@ -351,15 +396,23 @@ export default defineComponent({
       );
     };
 
+    const onEmitSelectTransactionEvent = async (payload: any) => {
+      const ratingPlaces = await createRatingFromTransactionEvent(payload);
+      places.first = ratingPlaces.first;
+      places.second = ratingPlaces.second;
+      places.third = ratingPlaces.third;
+    };
+
     return {
       places,
       dataForChart,
-      chartData,
+      // chartData,
       horizontalOptions,
       pastLogs,
       dataForRatingContract,
-      onClick,
+      // onClick,
       onClickSendRequestToNode,
+      onEmitSelectTransactionEvent,
     };
   },
 });
