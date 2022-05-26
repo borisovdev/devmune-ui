@@ -1,16 +1,30 @@
 <template>
-  <p-card>
+  <p-card class="mb-2" :style="{ textAlign: `left` }">
     <template #title>
-      {{ transaction.hash }}
+      <h3 :style="{ fontSize: `0.9rem` }">
+        {{ transaction.hash }}
+      </h3>
     </template>
 
     <template #subtitle>
-      From {{ transaction.from }} To {{ transaction.to }}
+      <p :style="{ fontSize: `0.825rem` }">
+        From {{ transaction.from }} To {{ transaction.to }}
+      </p>
     </template>
 
     <template #content>
-      <code>
-        {{ decodedInput }}
+      <span
+        :style="{
+          display: `block`,
+          marginBottom: `5px`,
+          fontSize: `0.825rem`,
+          fontWeight: `600`,
+        }"
+        >Event decoded data</span
+      >
+
+      <code :style="{ fontSize: `12px` }">
+        {{ decodedEventInput }}
       </code>
     </template>
   </p-card>
@@ -20,8 +34,6 @@
 import { defineComponent, computed } from "vue";
 import PCard from "primevue/card";
 import Web3 from "web3";
-// @ts-ignore
-import * as DevmuneContractAbi from "../../contracts/DevmuneRatingInteractor.abi.json";
 
 export default defineComponent({
   components: {
@@ -32,60 +44,61 @@ export default defineComponent({
       type: Object,
       required: true,
     },
+    event: {
+      type: Object,
+      required: true,
+    },
   },
   setup(props) {
     const web3 = new Web3(Web3.givenProvider);
 
-    // const inputForAbiDecode = [
-    //   {
-    //     type: "bytes32",
-    //     name: "requestId",
-    //     indexed: true,
-    //   },
-    //   {
-    //     type: "string",
-    //     name: "firstPlace",
-    //   },
-    //   {
-    //     type: "uint256",
-    //     name: "firstPlaceWeight",
-    //   },
-    //   {
-    //     type: "string",
-    //     name: "secondPlace",
-    //   },
-    //   {
-    //     type: "uint256",
-    //     name: "secondPlaceWeight",
-    //   },
-    //   {
-    //     type: "string",
-    //     name: "thirdPlace",
-    //   },
-    //   {
-    //     type: "uint256",
-    //     name: "thirdPlaceWeight",
-    //   },
-    // ];
+    const inputForAbiDecode = [
+      {
+        type: "bytes32",
+        name: "requestId",
+        indexed: true,
+      },
+      {
+        type: "string",
+        name: "firstPlace",
+      },
+      {
+        type: "uint256",
+        name: "firstPlaceWeight",
+      },
+      {
+        type: "string",
+        name: "secondPlace",
+      },
+      {
+        type: "uint256",
+        name: "secondPlaceWeight",
+      },
+      {
+        type: "string",
+        name: "thirdPlace",
+      },
+      {
+        type: "uint256",
+        name: "thirdPlaceWeight",
+      },
+    ];
 
-    const decodedInput = computed(() => {
+    const decodedEventInput = computed(() => {
       try {
-        // return web3.utils.toAscii(props.transaction.input);
-        debugger;
         return web3.eth.abi.decodeLog(
-          // @ts-ignore
-          DevmuneContractAbi.default,
-          props.transaction.input,
-          []
+          inputForAbiDecode,
+          props.event.raw.data,
+          props.event.raw.topics
         );
       } catch (ex) {
         console.warn(ex);
-        return "";
+        return "Error on decoding";
       }
     });
 
     return {
-      decodedInput,
+      decodedEventInput,
     };
   },
 });

@@ -1,75 +1,90 @@
 <template>
-  <section>
-    <div>
-      <div>
-        <input-text
-          id="field-repo"
-          type="text"
-          v-model="dataForRatingContract.repo"
-          placeholder="Repository"
-        ></input-text>
-      </div>
+  <section class="container-fluid" :style="{ textAlign: `left` }">
+    <div class="row">
+      <div class="col-7">
+        <div>
+          <h2>Create Rating request</h2>
 
-      <div>
-        <input-text
-          id="field-repo-owner"
-          type="text"
-          v-model="dataForRatingContract.repoOwner"
-          placeholder="Repository owner"
-        ></input-text>
-      </div>
-
-      <p-button
-        label="Send request to node"
-        class="p-button-rounded"
-        @click.stop="onClickSendRequestToNode"
-      ></p-button>
-    </div>
-
-    <div v-if="!!pastLogs?.length">
-      <p-timeline :value="pastLogs" align="alternate">
-        <template #marker="slotProps">
-          <span
-            class="custom-marker shadow-2"
-            :style="{ backgroundColor: slotProps.item.color }"
+          <form
+            :style="{ textAlign: `left` }"
+            @submit.prevent="onClickSendRequestToNode"
           >
-          </span>
-        </template>
+            <fieldset class="row" :style="{ border: `none` }">
+              <legend>Enter GitHub repository data for create rating</legend>
+              <div class="col">
+                <input-text
+                  id="field-repo"
+                  type="text"
+                  v-model="dataForRatingContract.repo"
+                  placeholder="Repository"
+                  class="mb-3"
+                ></input-text>
+              </div>
 
-        <template #content="slotProps">
+              <div class="col">
+                <input-text
+                  id="field-repo-owner"
+                  type="text"
+                  v-model="dataForRatingContract.repoOwner"
+                  placeholder="Repository owner"
+                  class="mb-3"
+                ></input-text>
+              </div>
+            </fieldset>
+
+            <p-button
+              type="submit"
+              label="Send request to node"
+              class="p-button-rounded"
+            ></p-button>
+          </form>
+        </div>
+
+        <!-- <button @click="onClick">call method</button> -->
+
+        <div>
+          <rating-contributor
+            v-if="places.first !== undefined"
+            :contributor="places.first"
+          ></rating-contributor>
+
+          <rating-contributor
+            v-if="places.second !== undefined"
+            :contributor="places.second"
+          ></rating-contributor>
+
+          <rating-contributor
+            v-if="places.third !== undefined"
+            :contributor="places.third"
+          ></rating-contributor>
+        </div>
+
+        <div>
+          <p-chart
+            v-if="dataForChart !== undefined"
+            type="bar"
+            :data="dataForChart"
+            :options="horizontalOptions"
+          ></p-chart>
+        </div>
+      </div>
+
+      <div class="col-5">
+        <h2>History of rating events</h2>
+
+        <div v-if="!!pastLogs?.length">
           <transaction-list-item
-            :transaction="slotProps.item"
+            v-for="pastLog in pastLogs"
+            :key="pastLog.transaction.transactionHash"
+            :transaction="pastLog.transaction"
+            :event="pastLog.event"
           ></transaction-list-item>
-        </template>
-      </p-timeline>
-    </div>
+        </div>
 
-    <button @click="onClick">call method</button>
-
-    <div>
-      <rating-contributor
-        v-if="places.first !== undefined"
-        :contributor="places.first"
-      ></rating-contributor>
-
-      <rating-contributor
-        v-if="places.second !== undefined"
-        :contributor="places.second"
-      ></rating-contributor>
-
-      <rating-contributor
-        v-if="places.third !== undefined"
-        :contributor="places.third"
-      ></rating-contributor>
-    </div>
-
-    <div>
-      <p-chart
-        v-if="dataForChart !== undefined"
-        type="bar"
-        :data="dataForChart"
-        :options="horizontalOptions"
-      ></p-chart>
+        <p-message v-else severity="info">
+          Not found events. Try to be first!
+        </p-message>
+      </div>
     </div>
   </section>
 </template>
@@ -95,6 +110,7 @@ import PTimeline from "primevue/timeline";
 import TransactionListItem from "../components/transactions/TransactionListItem.vue";
 import InputText from "primevue/inputtext";
 import PButton from "primevue/button";
+import PMessage from "primevue/message";
 
 type Places = {
   first: RatingContributor | undefined;
@@ -110,6 +126,7 @@ export default defineComponent({
     TransactionListItem,
     InputText,
     PButton,
+    PMessage,
   },
   setup() {
     const web3 = new Web3(Web3.givenProvider);
@@ -141,21 +158,23 @@ export default defineComponent({
 
     const createPastLogsForDevmuneContract = async () => {
       try {
-        const logs = await web3.eth.getPastLogs({
+        // const logs = await web3.eth.getPastLogs({
+        //   fromBlock: "0x0",
+        //   address: devmuneContractAddress,
+        // });
+        const logs = await devmuneContract.getPastEvents("DataFulfilled", {
           fromBlock: "0x0",
-          address: devmuneContractAddress,
+          // address: devmuneContractAddress,
         });
-        // debugger;
-        // pastLogs.value = logs;
+        debugger;
         for await (const pastLog of logs) {
           const transactionDetails = await web3.eth.getTransaction(
             pastLog.transactionHash
           );
           debugger;
-          const ascii = web3.utils.toAscii(transactionDetails.input);
           pastLogs.value.push({
-            ...transactionDetails,
-            topics: pastLog.topics,
+            transaction: transactionDetails,
+            event: pastLog,
           });
         }
       } catch (ex) {

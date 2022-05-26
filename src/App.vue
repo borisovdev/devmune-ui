@@ -1,9 +1,11 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import TheHomeView from "./views/TheHomeView.vue";
+import TheHeader from "./components/header/TheHeader.vue";
 
 export default defineComponent({
   components: {
+    TheHeader,
     TheHomeView,
   },
   setup() {
@@ -13,7 +15,10 @@ export default defineComponent({
 </script>
 
 <template>
-  <the-home-view></the-home-view>
+  <the-header></the-header>
+  <main>
+    <the-home-view></the-home-view>
+  </main>
 </template>
 
 <style>
