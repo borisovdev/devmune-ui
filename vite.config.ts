@@ -11,5 +11,9 @@ export default defineConfig({
       util: "util",
     },
   },
+  build: {
+      target: "es2015",
+      sourcemap: true,
+  },
   plugins: [vue()],
 });
