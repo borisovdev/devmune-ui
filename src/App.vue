@@ -1,7 +1,9 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
 import TheHomeView from "./views/TheHomeView.vue";
 import TheHeader from "./components/header/TheHeader.vue";
+import Web3Connection from "./services/web3/Web3Connection";
+import Web3 from "web3";
 
 export default defineComponent({
   components: {
@@ -9,6 +11,12 @@ export default defineComponent({
     TheHomeView,
   },
   setup() {
+    const web3Connection = Web3Connection.getInstance(Web3.givenProvider);
+
+    onMounted(() => {
+      web3Connection.setWeb3ToWindowObject();
+    });
+
     return {};
   },
 });

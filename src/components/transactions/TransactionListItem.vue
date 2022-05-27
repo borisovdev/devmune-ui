@@ -1,5 +1,12 @@
 <template>
-  <p-card class="mb-2" :style="{ textAlign: `left`, cursor: `pointer` }" @click.stop="onClickCard">
+  <p-card
+    :class="[
+      `transaction-list-item`,
+      `mb-2`,
+      { 'transaction-list-item--in-focus': isInFocus },
+    ]"
+    @click.stop="onClickCard"
+  >
     <template #title>
       <h3 :style="{ fontSize: `0.9rem` }">
         {{ transaction.hash }}
@@ -46,6 +53,10 @@ export default defineComponent({
     },
     event: {
       type: Object,
+      required: true,
+    },
+    isInFocus: {
+      type: Boolean,
       required: true,
     },
   },
@@ -114,4 +125,13 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.transaction-list-item {
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+.transaction-list-item--in-focus {
+  border: 1px solid var(--main-color);
+}
+</style>
