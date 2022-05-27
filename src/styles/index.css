@@ -1,6 +1,7 @@
 @import './root/index.css';
 @import './reboot/index.css';
 @import './comopnents/index.css';
+@import './transitions/index.css';
 
 main {
   padding-top: 100px;

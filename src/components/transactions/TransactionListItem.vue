@@ -2,20 +2,26 @@
   <p-card
     :class="[
       `transaction-list-item`,
-      `mb-2`,
+      `mb-3`,
       { 'transaction-list-item--in-focus': isInFocus },
     ]"
     @click.stop="onClickCard"
   >
     <template #title>
-      <h3 :style="{ fontSize: `0.9rem` }">
+      <span :style="{ fontSize: `0.9rem` }"
+        >Block #{{ transaction.blockNumber }}</span
+      >
+      <h3 :style="{ fontSize: `0.9rem`, fontWeight: 600 }">
         {{ transaction.hash }}
       </h3>
     </template>
 
     <template #subtitle>
       <p :style="{ fontSize: `0.825rem` }">
-        From {{ transaction.from }} To {{ transaction.to }}
+        From <b>{{ transaction.from }}</b>
+      </p>
+      <p :style="{ fontSize: `0.825rem` }">
+        To <b>{{ transaction.to }}</b>
       </p>
     </template>
 
@@ -25,7 +31,7 @@
           display: `block`,
           marginBottom: `5px`,
           fontSize: `0.825rem`,
-          fontWeight: `600`,
+          fontWeight: 600,
         }"
         >Event decoded data</span
       >
@@ -130,8 +136,10 @@ export default defineComponent({
   cursor: pointer;
   text-align: left;
   transition: all 0.3s ease;
+  border-radius: 15px;
+  box-shadow: 3px 3px 25px rgba(0,0,0, 0.3);
 }
 .transaction-list-item--in-focus {
-  border: 1px solid var(--main-color);
+  box-shadow: 3px 3px 25px rgba(70, 112, 183, 0.8);
 }
 </style>

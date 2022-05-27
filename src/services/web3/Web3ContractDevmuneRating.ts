@@ -45,13 +45,14 @@ export default class Web3ContractDevmuneRating {
    * @param fromDate
    * @throws {Error}
    */
-  public async sendRequestRatingFromContract(
+  public sendRequestRatingFromContract(
     repo: string,
     repoOwner: string,
-    fromDate: string
-  ): Promise<any> {
+    fromDate: Date
+  ): any {
+    const fromDateString = `${fromDate.toISOString()}`;
     const contractMethodTransactionAbi = this._contractInstance.methods
-      .requestRating(repo, repoOwner, fromDate)
+      .requestRating(repo, repoOwner, fromDateString)
       .encodeABI();
     debugger;
 
@@ -61,12 +62,9 @@ export default class Web3ContractDevmuneRating {
       from: window.ethereum.selectedAddress,
       data: contractMethodTransactionAbi,
     };
-    // @ts-ignore
-    const txHash = await window.ethereum.request({
-      method: "eth_sendTransaction",
-      params: [transactionParameters],
-    });
 
-    return txHash;
+    return this.web3Connection
+      .getWeb3()
+      .eth.sendTransaction(transactionParameters);
   }
 }

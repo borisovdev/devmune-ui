@@ -43,7 +43,7 @@ export default defineComponent({
   },
   props: {
     places: {
-      type: Object as PropType<Places>,
+      type: Object as PropType<any>,
       required: true,
     },
   },

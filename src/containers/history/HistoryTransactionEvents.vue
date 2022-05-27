@@ -2,25 +2,29 @@
   <div>
     <h2>History of rating events</h2>
 
-    <div v-if="!!pastLogs?.length">
-      <transaction-list-item
-        v-for="pastLog in pastLogs"
-        :key="pastLog.transaction.transactionHash"
-        :transaction="pastLog.transaction"
-        :event="pastLog.event"
-        :isInFocus="eventIdInFocus === pastLog.event.id"
-        @select:transactionEvent="onEmitSelectTransactionEvent"
-      ></transaction-list-item>
-    </div>
+    <transition name="fade">
+      <div v-if="!!transactionEventsSortedByBlockNumberASC?.length">
+        <transition-group name="list" tag="div">
+          <transaction-list-item
+            v-for="pastLog in transactionEventsSortedByBlockNumberASC"
+            :key="pastLog.transaction.transactionHash"
+            :transaction="pastLog.transaction"
+            :event="pastLog.event"
+            :isInFocus="eventIdInFocus === pastLog.event.id"
+            @select:transactionEvent="onEmitSelectTransactionEvent"
+          ></transaction-list-item>
+        </transition-group>
+      </div>
 
-    <p-message v-else severity="info">
-      Not found events. Try to be first!
-    </p-message>
+      <p-message v-else severity="info">
+        Not found events. Try to be first!
+      </p-message>
+    </transition>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import PMessage from "primevue/message";
 import TransactionListItem from "../../components/transactions/TransactionListItem.vue";
 import Web3Connection from "../../services/web3/Web3Connection";
@@ -47,51 +51,88 @@ export default defineComponent({
 
     const web3Connection = Web3Connection.getInstance(Web3.givenProvider);
     const devmuneContract = Web3ContractDevmuneRating.getInstance(
+      // @ts-ignore
       DevmuneContractAbi.default,
       devmuneContractAddress,
       web3Connection
     );
 
-    const pastLogs = ref<any[]>([]);
+    const transactionEvents = ref<any[]>([]);
+    const transactionEventsSortedByBlockNumberASC = computed<any[]>(() => {
+      return transactionEvents.value.sort((a, b) => {
+        return b.transaction.blockNumber - a.transaction.blockNumber;
+      });
+    });
 
-    const createPastLogsForDevmuneContract = async () => {
+    const createTransactionEventFromEvent = async (
+      event: any
+    ): Promise<any> => {
+      const transactionDetails = await web3Connection
+        .getWeb3()
+        .eth.getTransaction(event.transactionHash);
+      debugger;
+
+      return {
+        transaction: transactionDetails,
+        event: event,
+      };
+    };
+
+    const createtransactionEventsForDevmuneContract = async () => {
       try {
-        const logs = await devmuneContract
+        const events = await devmuneContract
           .getContract()
           .getPastEvents(eventNameForObserve, {
             fromBlock: "0x0",
           });
-        debugger;
 
-        for await (const pastLog of logs) {
-          const transactionDetails = await web3Connection
-            .getWeb3()
-            .eth.getTransaction(pastLog.transactionHash);
-          debugger;
-
-          pastLogs.value.push({
-            transaction: transactionDetails,
-            event: pastLog,
-          });
+        for await (const event of events) {
+          const transactionEvent = await createTransactionEventFromEvent(event);
+          transactionEvents.value.push(transactionEvent);
         }
       } catch (ex) {
         console.error(ex);
       }
     };
 
-    onMounted(async () => {
-      await createPastLogsForDevmuneContract();
+    // onMounted(async () => {
+    //   await createtransactionEventsForDevmuneContract();
+    // });
+
+    const subscribeToNewTransactionEvents = () => {
+      devmuneContract
+        .getContract()
+        .events[eventNameForObserve]({
+          fromBlock: "0x0",
+        })
+        .on("data", async (event: any) => {
+          debugger;
+          const transactionEvent = await createTransactionEventFromEvent(event);
+          transactionEvents.value.push(transactionEvent);
+        })
+        .on("changed", (event: any) => {
+          debugger;
+        })
+        .on("connected", (subId: string) => {
+          //
+        })
+        .on("error", (error: Error) => {
+          console.warn(error);
+        });
+    };
+
+    onMounted(() => {
+      subscribeToNewTransactionEvents();
     });
 
     const onEmitSelectTransactionEvent = (payload: any) => {
-      debugger;
       eventIdInFocus.value = payload.id;
       emit("select:transactionEvent", payload);
     };
 
     return {
       eventIdInFocus,
-      pastLogs,
+      transactionEventsSortedByBlockNumberASC,
       onEmitSelectTransactionEvent,
     };
   },
