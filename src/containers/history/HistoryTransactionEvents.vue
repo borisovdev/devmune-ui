@@ -44,7 +44,7 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    const devmuneContractAddress = "0x4efd0C1E7E3DD4cA2ea6C737d1c6CcEDAcaBdc43";
+    const devmuneContractAddress = import.meta.env.VITE_DEVMUNE_CONTRACT_ADDRESS;
     const eventNameForObserve = "DataFulfilled";
 
     const eventIdInFocus = ref<string | undefined>(undefined);

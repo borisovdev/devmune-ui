@@ -11,7 +11,9 @@ export default defineComponent({
     TheHomeView,
   },
   setup() {
-    const web3Connection = Web3Connection.getInstance(Web3.givenProvider);
+    const web3Connection = Web3Connection.getInstance(
+      import.meta.env.VITE_WEB3_WS_CONNECT_URL || Web3.givenProvider
+    );
 
     onMounted(() => {
       web3Connection.setWeb3ToWindowObject();

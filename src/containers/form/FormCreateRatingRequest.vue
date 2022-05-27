@@ -96,7 +96,7 @@ export default defineComponent({
     PCalendar,
   },
   setup() {
-    const devmuneContractAddress = "0x4efd0C1E7E3DD4cA2ea6C737d1c6CcEDAcaBdc43";
+    const devmuneContractAddress = import.meta.env.VITE_DEVMUNE_CONTRACT_ADDRESS;
     const web3Connection = Web3Connection.getInstance(Web3.givenProvider);
     const devmuneContract = Web3ContractDevmuneRating.getInstance(
       // @ts-ignore
