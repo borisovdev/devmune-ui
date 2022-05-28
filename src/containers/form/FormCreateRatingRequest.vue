@@ -13,12 +13,12 @@
 
     <div class="mb-2">
       <span style="display: block" class="mb-2">Try our presets</span>
-      <div style="display: inline-flex">
+      <div style="display: inline-flex; flex-wrap: wrap;">
         <p-button
           v-for="preset in presets"
           :key="preset.name"
           :label="preset.name"
-          class="me-2 p-button-outlined p-button-secondary"
+          class="me-2 mb-2 p-button-outlined p-button-secondary"
           @click.stop="() => onClickPreset(preset)"
         ></p-button>
       </div>
@@ -96,7 +96,8 @@ export default defineComponent({
     PCalendar,
   },
   setup() {
-    const devmuneContractAddress = import.meta.env.VITE_DEVMUNE_CONTRACT_ADDRESS;
+    const devmuneContractAddress = import.meta.env
+      .VITE_DEVMUNE_CONTRACT_ADDRESS;
     const web3Connection = Web3Connection.getInstance(Web3.givenProvider);
     const devmuneContract = Web3ContractDevmuneRating.getInstance(
       // @ts-ignore
@@ -130,6 +131,42 @@ export default defineComponent({
         repoOwner: "smartcontractkit",
         fromDate: getDateFromIso("2022-03-05"),
       },
+      {
+        name: "React",
+        repo: "react",
+        repoOwner: "facebook",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
+      {
+        name: "Bootstrap",
+        repo: "bootstrap",
+        repoOwner: "twbs",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
+      {
+        name: "NodeRed",
+        repo: "node-red",
+        repoOwner: "node-red",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
+      {
+        name: "HardHat",
+        repo: "hardhat",
+        repoOwner: "NomicFoundation",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
+      {
+        name: "Ganache",
+        repo: "ganache",
+        repoOwner: "trufflesuite",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
+      {
+        name: "Vuejs Core",
+        repo: "core",
+        repoOwner: "vuejs",
+        fromDate: getDateFromIso("2022-03-05"),
+      },
     ];
 
     const onClickPreset = (preset: any): void => {
@@ -142,35 +179,20 @@ export default defineComponent({
       try {
         currentConfirmationStep.value = transactionConfirmationSteps["signing"];
 
-        devmuneContract
-          .sendRequestRatingFromContract(
-            dataForRatingContract.repo,
-            dataForRatingContract.repoOwner,
-            dataForRatingContract.fromDate
-          )
-          .on("transactionHash", (hash: string) => {
-            currentConfirmationStep.value =
-              transactionConfirmationSteps["transactionHash"];
-          })
-          .on("confirmation", (confitmationNumber: any, receipt: any) => {
-            currentConfirmationStep.value =
-              transactionConfirmationSteps["confirmation"];
+        const txHash = await devmuneContract.sendRequestRatingFromContract(
+          dataForRatingContract.repo,
+          dataForRatingContract.repoOwner,
+          dataForRatingContract.fromDate
+        );
+        if (!txHash) {
+          currentConfirmationStep.value = undefined;
+          return;
+        }
 
-            setTimeout(() => {
-              currentConfirmationStep.value =
-                transactionConfirmationSteps["done"];
-            }, 2000);
-          })
-          .on("receipt", (receipt: any) => {
-            currentConfirmationStep.value =
-              transactionConfirmationSteps["receipt"];
-          })
-          .on("error", (error: Error) => {
-            currentConfirmationStep.value = undefined;
-            console.warn(error);
-          });
+        currentConfirmationStep.value = transactionConfirmationSteps["done"];
       } catch (ex) {
         console.warn(ex);
+        currentConfirmationStep.value = undefined;
       }
     };
 

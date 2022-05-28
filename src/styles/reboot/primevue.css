@@ -1,4 +1,4 @@
-.p-button:not(.p-button-outlined) {
+.p-button:not(.p-button-outlined):not(.p-button-text) {
   background: var(--main-color)!important;
   border-color: var(--main-color)!important;
 }
